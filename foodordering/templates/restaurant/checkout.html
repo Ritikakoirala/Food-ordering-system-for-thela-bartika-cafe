@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Checkout</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <h3>Order Summary</h3>
+        <ul>
+            {% for item in cart_items %}
+            <li>{{ item.food_item.name }} x {{ item.quantity }} = ${{ item.subtotal }}</li>
+            {% endfor %}
+        </ul>
+        <p>Subtotal: ${{ subtotal }}</p>
+        <p>Tax: ${{ tax }}</p>
+        <p>Total: ${{ total }}</p>
+        <button type="submit" class="btn btn-primary">Place Order</button>
+    </form>
+</div>
+{% endblock %}

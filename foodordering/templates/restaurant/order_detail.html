@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1>Order #{{ order.order_number }}</h1>
+    <p>Status: {{ order.get_status_display }}</p>
+    <p>Delivery Address: {{ order.delivery_address }}</p>
+    <p>Phone: {{ order.phone }}</p>
+    <h3>Items</h3>
+    <ul>
+        {% for item in order.items.all %}
+        <li>{{ item.food_item.name }} x {{ item.quantity }} = ${{ item.subtotal }}</li>
+        {% endfor %}
+    </ul>
+    <p>Total: ${{ order.grand_total }}</p>
+</div>
+{% endblock %}

@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .items-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .admin-food-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s;
+    }
+
+    .admin-food-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .admin-food-actions {
+        padding: 1rem;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .stock-indicator {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--success);
+        color: white;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+    }
+
+    .stock-indicator.low {
+        background: var(--warning);
+    }
+
+    .stock-indicator.out {
+        background: var(--danger);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="items-header">
+        <h1>🍕 Food Items Management</h1>
+        <a href="{% url 'admin_food_add' %}" class="btn btn-success">
+            ➕ Add New Item
+        </a>
+    </div>
+
+    <div class="items-grid">
+        {% for item in items %}
+        <div class="admin-food-card">
+            <div style="position: relative;">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" alt="{{ item.name }}" class="food-image">
+                {% else %}
+                <div class="food-image" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center; font-size: 3rem;">🍽️</div>
+                {% endif %}
+                {% if item.stock > 20 %}
+                <span class="stock-indicator">Stock: {{ item.stock }}</span>
+                {% elif item.stock > 0 %}
+                <span class="stock-indicator low">Low Stock: {{ item.stock }}</span>
+                {% else %}
+                <span class="stock-indicator out">Out of Stock</span>
+                {% endif %}
+            </div>
+            <div class="food-info">
+                <div class="food-name">{{ item.name }}</div>
+                <div class="food-desc">{{ item.description|truncatewords:10 }}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                    <div class="food-price">${{ item.price }}</div>
+                    <div style="font-size: 0.9rem; color: #666;">{{ item.category.name }}</div>
+                </div>
+                <div style="margin-top: 0.5rem;">
+                    {% if item.is_available %}
+                    <span style="color: var(--success); font-weight: bold;">✓ Available</span>
+                    {% else %}
+                    <span style="color: var(--danger); font-weight: bold;">✗ Unavailable</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="admin-food-actions">
+                <a href="{% url 'admin_food_edit' item.id %}" class="btn btn-primary" style="flex: 1;">
+                    Edit
+                </a>
+                <form method="post" action="{% url 'admin_food_delete' item.id %}" style="flex: 1;" onsubmit="return confirm('Delete this item?')">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger" style="width: 100%;">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

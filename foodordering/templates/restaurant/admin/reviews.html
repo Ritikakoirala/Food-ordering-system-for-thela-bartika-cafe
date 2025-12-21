@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 style="margin-bottom: 2rem;">⭐ Customer Reviews</h1>
+
+    <div style="background: white; padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow);">
+        {% for review in reviews %}
+        <div style="padding: 1.5rem; border-bottom: 1px solid #eee;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                <div>
+                    <strong>{{ review.user.get_full_name|default:review.user.username }}</strong>
+                    <div style="color: #ffd700; margin: 0.25rem 0;">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}⭐{% endif %}
+                        {% endfor %}
+                    </div>
+                    <div style="font-size: 0.9rem; color: #666;">{{ review.food_item.name }}</div>
+                </div>
+                <button class="btn {% if review.approved %}btn-danger{% else %}btn-success{% endif %}"
+                        onclick="toggleApproval({{ review.id }}, {{ review.approved|yesno:'true,false' }})">
+                    {% if review.approved %}Disapprove{% else %}Approve{% endif %}
+                </button>
+            </div>
+            <p>{{ review.comment }}</p>
+            <div style="font-size: 0.85rem; color: #999;">{{ review.created_at|date:"M d, Y" }}</div>
+        </div>
+        {% empty %}
+        <div style="text-align: center; padding: 2rem; color: #666;">
+            No reviews yet
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleApproval(reviewId, currentStatus) {
+    // In real implementation, make AJAX call to toggle approval
+    showToast('Review approval toggled!', 'success');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .hero {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        color: white;
+        padding: 3rem 1rem;
+        border-radius: 12px;
+        margin-bottom: 3rem;
+        text-align: center;
+    }
+
+    .hero h1 {
+        font-size: 2.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .hero p {
+        font-size: 1.2rem;
+        opacity: 0.9;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        margin-bottom: 2rem;
+        text-align: center;
+    }
+
+    .category-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s;
+        cursor: pointer;
+        text-align: center;
+        padding: 2rem;
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .category-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .food-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s;
+    }
+
+    .food-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .food-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .food-info {
+        padding: 1rem;
+    }
+
+    .food-name {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .food-price {
+        color: var(--primary);
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin: 0.5rem 0;
+    }
+
+    .rating {
+        color: #ffd700;
+        margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 640px) {
+        .hero h1 {
+            font-size: 1.8rem;
+        }
+        
+        .hero p {
+            font-size: 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Hero Section -->
+    <div class="hero">
+        <h1>🍔 Hungry? Order Now!</h1>
+        <p>Get your favorite food delivered hot & fresh to your doorstep</p>
+        <a href="{% url 'menu' %}" class="btn btn-success" style="background: white; color: var(--primary);">
+            Browse Menu
+        </a>
+    </div>
+
+    <!-- Categories Section -->
+    <h2 class="section-title">Popular Categories</h2>
+    <div class="grid">
+        {% for category in featured_categories %}
+        <a href="{% url 'menu' %}?category={{ category.id }}" style="text-decoration: none;">
+            <div class="category-card">
+                <div class="category-icon">
+                    {% if 'pizza' in category.name|lower %}🍕
+                    {% elif 'burger' in category.name|lower %}🍔
+                    {% elif 'drink' in category.name|lower %}🥤
+                    {% elif 'dessert' in category.name|lower %}🍰
+                    {% elif 'pasta' in category.name|lower %}🍝
+                    {% else %}🍽️{% endif %}
+                </div>
+                <h3>{{ category.name }}</h3>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+
+    <!-- Popular Items -->
+    <h2 class="section-title" style="margin-top: 3rem;">Popular Items</h2>
+    <div class="grid">
+        {% for item in popular_items %}
+        <div class="food-card">
+            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="food-image">
+            <div class="food-info">
+                <div class="food-name">{{ item.name }}</div>
+                <div class="rating">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= item.average_rating %}⭐{% endif %}
+                    {% endfor %}
+                    ({{ item.review_count }})
+                </div>
+                <div class="food-price">${{ item.price }}</div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="addToCart({{ item.id }})">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function addToCart(foodId) {
+    console.log('Add to cart clicked for foodId:', foodId);
+    {% if not user.is_authenticated %}
+        console.log('User not authenticated, redirecting to login');
+        window.location.href = '{% url "login" %}';
+        return;
+    {% endif %}
+
+    console.log('Making fetch request to add to cart');
+    fetch('{% url "add_to_cart" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrftoken
+        },
+        body: `food_id=${foodId}&quantity=1`
+    })
+    .then(res => {
+        console.log('Response status:', res.status);
+        return res.json();
+    })
+    .then(data => {
+        console.log('Response data:', data);
+        if (data.success) {
+            showToast(data.message);
+            const badge = document.querySelector('.cart-badge');
+            if (badge) {
+                badge.textContent = data.cart_count;
+            } else if (data.cart_count > 0) {
+                // Create badge if it doesn't exist
+                const cartIcon = document.querySelector('.cart-icon');
+                if (cartIcon) {
+                    const newBadge = document.createElement('span');
+                    newBadge.className = 'cart-badge';
+                    newBadge.textContent = data.cart_count;
+                    cartIcon.appendChild(newBadge);
+                }
+            }
+        }
+    })
+    .catch(error => {
+        console.error('Error adding to cart:', error);
+    });
+}
+</script>
+{% endblock %}

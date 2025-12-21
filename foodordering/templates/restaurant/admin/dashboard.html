@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .admin-header {
+        background: linear-gradient(135deg, var(--secondary) 0%, #2d3142 100%);
+        color: white;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        border-left: 4px solid var(--primary);
+        transition: transform 0.3s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .stat-card.success {
+        border-left-color: var(--success);
+    }
+
+    .stat-card.warning {
+        border-left-color: var(--warning);
+    }
+
+    .stat-card.danger {
+        border-left-color: var(--danger);
+    }
+
+    .stat-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--dark);
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+    }
+
+    .recent-orders {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+    }
+
+    .orders-table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow-x: auto;
+        display: block;
+    }
+
+    .orders-table thead {
+        background: var(--secondary);
+        color: white;
+    }
+
+    .orders-table th,
+    .orders-table td {
+        padding: 1rem;
+        text-align: left;
+        border-bottom: 1px solid #eee;
+    }
+
+    .orders-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-preparing {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .status-out_for_delivery {
+        background: #d1e7dd;
+        color: #0f5132;
+    }
+
+    .status-delivered {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .status-cancelled {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .chart-container {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+    }
+
+    .admin-nav {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .admin-nav a {
+        padding: 0.75rem 1.5rem;
+        background: white;
+        color: var(--dark);
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: 600;
+        box-shadow: var(--shadow);
+        transition: all 0.3s;
+    }
+
+    .admin-nav a:hover,
+    .admin-nav a.active {
+        background: var(--primary);
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .orders-table {
+            font-size: 0.85rem;
+        }
+
+        .orders-table th,
+        .orders-table td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>🎯 Admin Dashboard</h1>
+        <p>Manage your restaurant operations</p>
+    </div>
+
+    <div class="admin-nav">
+        <a href="{% url 'admin_dashboard' %}" class="active">Dashboard</a>
+        <a href="{% url 'admin_orders' %}">Orders</a>
+        <a href="{% url 'admin_food_items' %}">Food Items</a>
+        <a href="{% url 'admin_reviews' %}">Reviews</a>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">📦</div>
+            <div class="stat-value">{{ total_orders }}</div>
+            <div class="stat-label">Total Orders</div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-value">{{ pending_orders }}</div>
+            <div class="stat-label">Pending Orders</div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon">💰</div>
+            <div class="stat-value">${{ total_revenue|floatformat:2 }}</div>
+            <div class="stat-label">Total Revenue</div>
+        </div>
+
+        <div class="stat-card danger">
+            <div class="stat-icon">👥</div>
+            <div class="stat-value">{{ total_customers }}</div>
+            <div class="stat-label">Total Customers</div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <h2 style="margin-bottom: 1rem;">📊 Sales Analytics</h2>
+        <canvas id="salesChart" style="max-height: 300px;"></canvas>
+    </div>
+
+    <div class="recent-orders">
+        <h2 style="margin-bottom: 1rem;">Recent Orders</h2>
+        <div style="overflow-x: auto;">
+            <table class="orders-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td><strong>{{ order.order_number }}</strong></td>
+                        <td>{{ order.user.get_full_name|default:order.user.username }}</td>
+                        <td>${{ order.grand_total }}</td>
+                        <td><span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span></td>
+                        <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'admin_order_detail' order.id %}" class="btn btn-primary" style="padding: 0.5rem 1rem;">
+                                View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Sales Chart
+const ctx = document.getElementById('salesChart');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        datasets: [{
+            label: 'Sales ($)',
+            data: [1200, 1900, 3000, 5000, 4500, 6000, 7500, 6800, 7200, 8500, 9000, 9500],
+            borderColor: 'rgb(255, 107, 53)',
+            backgroundColor: 'rgba(255, 107, 53, 0.1)',
+            tension: 0.4,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '$' + value;
+                    }
+                }
+            }
+        }
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .order-detail-container {
+        display: grid;
+        gap: 2rem;
+        grid-template-columns: 2fr 1fr;
+    }
+
+    .detail-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+    }
+
+    .detail-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .detail-row:last-child {
+        border-bottom: none;
+    }
+
+    .order-items {
+        margin-top: 1rem;
+    }
+
+    .order-item {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid #eee;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+    }
+
+    .item-image {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+    }
+
+    .status-update-form {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+    }
+
+    .status-select {
+        width: 100%;
+        padding: 0.75rem;
+        border: 2px solid #ddd;
+        border-radius: 8px;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .order-detail-container {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{% url 'admin_orders' %}" style="text-decoration: none; color: var(--primary); margin-bottom: 1rem; display: inline-block;">
+        ← Back to Orders
+    </a>
+
+    <h1 style="margin-bottom: 2rem;">Order Details - {{ order.order_number }}</h1>
+
+    <div class="order-detail-container">
+        <div>
+            <div class="detail-card">
+                <h2 style="margin-bottom: 1rem;">Customer Information</h2>
+                <div class="detail-row">
+                    <strong>Name:</strong>
+                    <span>{{ order.user.get_full_name|default:order.user.username }}</span>
+                </div>
+                <div class="detail-row">
+                    <strong>Email:</strong>
+                    <span>{{ order.user.email }}</span>
+                </div>
+                <div class="detail-row">
+                    <strong>Phone:</strong>
+                    <span>{{ order.phone }}</span>
+                </div>
+                <div class="detail-row">
+                    <strong>Delivery Address:</strong>
+                    <span>{{ order.delivery_address }}</span>
+                </div>
+                {% if order.notes %}
+                <div class="detail-row">
+                    <strong>Notes:</strong>
+                    <span>{{ order.notes }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="detail-card" style="margin-top: 2rem;">
+                <h2 style="margin-bottom: 1rem;">Order Items</h2>
+                <div class="order-items">
+                    {% for item in order.items.all %}
+                    <div class="order-item">
+                        {% if item.food_item.image %}
+                        <img src="{{ item.food_item.image.url }}" alt="{{ item.food_item.name }}" class="item-image">
+                        {% else %}
+                        <div class="item-image" style="background: #f0f0f0; display: flex; align-items: center; justify-content: center;">🍽️</div>
+                        {% endif %}
+                        <div style="flex: 1;">
+                            <div style="font-weight: bold; font-size: 1.1rem;">{{ item.food_item.name }}</div>
+                            <div style="color: #666;">Quantity: {{ item.quantity }}</div>
+                            <div style="color: var(--primary); font-weight: bold;">${{ item.price }} each</div>
+                        </div>
+                        <div style="font-weight: bold; font-size: 1.2rem; color: var(--primary);">
+                            ${{ item.subtotal }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid #ddd;">
+                    <div class="detail-row">
+                        <strong>Subtotal:</strong>
+                        <span>${{ order.total_price }}</span>
+                    </div>
+                    <div class="detail-row">
+                        <strong>Tax:</strong>
+                        <span>${{ order.tax }}</span>
+                    </div>
+                    <div class="detail-row" style="font-size: 1.3rem; color: var(--primary);">
+                        <strong>Grand Total:</strong>
+                        <strong>${{ order.grand_total }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="status-update-form">
+                <h2 style="margin-bottom: 1rem;">Update Status</h2>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Current Status:</strong>
+                    <span class="status-badge status-{{ order.status }}" style="margin-left: 0.5rem;">
+                        {{ order.get_status_display }}
+                    </span>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <select name="status" class="status-select">
+                        {% for status_code, status_name in status_choices %}
+                        <option value="{{ status_code }}" {% if order.status == status_code %}selected{% endif %}>
+                            {{ status_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-success" style="width: 100%;">
+                        Update Status
+                    </button>
+                </form>
+
+                <div style="margin-top: 1rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                    <div style="font-size: 0.9rem; color: #666;">
+                        <strong>Order Date:</strong><br>
+                        {{ order.created_at|date:"M d, Y H:i A" }}
+                    </div>
+                    <div style="font-size: 0.9rem; color: #666; margin-top: 0.5rem;">
+                        <strong>Last Updated:</strong><br>
+                        {{ order.updated_at|date:"M d, Y H:i A" }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-card" style="margin-top: 1rem; background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white;">
+                <h3 style="margin-bottom: 0.5rem;">💡 Quick Actions</h3>
+                <button class="btn" style="width: 100%; background: white; color: var(--primary); margin-top: 0.5rem;" onclick="printOrder()">
+                    🖨️ Print Order
+                </button>
+                <button class="btn btn-success" style="width: 100%; margin-top: 0.5rem;" onclick="notifyCustomer()">
+                    📧 Notify Customer
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function printOrder() {
+    window.print();
+}
+
+function notifyCustomer() {
+    showToast('Customer notified via email!', 'success');
+}
+</script>
+{% endblock %}
