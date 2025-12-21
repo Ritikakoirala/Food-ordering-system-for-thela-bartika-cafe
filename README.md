@@ -1,4 +1,4 @@
-FOOD ORDERING SYSTEM FOR THELA
+FOOD ORDERING SYSTEM FOR restaurant
 
 A real-world restaurant management and food ordering web application built with Django, designed to be used in a live restaurant environment.
 This system helps restaurants manage online orders, menu items, customers, and admin operations efficiently.
