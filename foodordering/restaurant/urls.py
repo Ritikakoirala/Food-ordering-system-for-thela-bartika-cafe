@@ -14,6 +14,12 @@ urlpatterns = [
     path('checkout/', views.checkout, name='checkout'),
     path('orders/', views.order_history, name='order_history'),
     path('order/<int:pk>/', views.order_detail, name='order_detail'),
+
+    # Smart Features URLs
+    path('live-orders/', views.live_orders, name='live_orders'),
+    path('recommendations/', views.recommendations, name='recommendations'),
+    path('feedback/', views.feedback, name='submit_feedback'),
+    path('emotional-kit/', views.emotional_kit, name='emotional_kit'),
     path('register/', views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='restaurant/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
@@ -28,4 +34,5 @@ urlpatterns = [
     path('admin-dashboard/food-items/<int:pk>/delete/', views.admin_food_delete, name='admin_food_delete'),
     path('admin-dashboard/reviews/', views.admin_reviews, name='admin_reviews'),
     path('admin-dashboard/reviews/<int:pk>/approve/', views.admin_review_approve, name='admin_review_approve'),
+    path('admin-dashboard/feedback/', views.admin_feedback, name='admin_feedback'),
 ]

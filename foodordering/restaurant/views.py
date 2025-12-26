@@ -218,6 +218,119 @@ def register(request):
         form = CustomerRegistrationForm()
     return render(request, 'restaurant/register.html', {'form': form})
 
+# Smart Features Views
+@login_required
+def live_orders(request):
+    """Live order tracking view"""
+    # Get the most recent active order for tracking
+    order = Order.objects.filter(user=request.user).exclude(status='delivered').first()
+
+    if not order:
+        # If no active orders, show a message
+        context = {
+            'no_active_orders': True,
+            'page_title': 'Live Order Tracking'
+        }
+        return render(request, 'restaurant/live_orders.html', context)
+
+    # Define order stages
+    stages = [
+        {'key': 'pending', 'label': 'Order Placed', 'icon': '📝', 'message': 'Your order has been received'},
+        {'key': 'preparing', 'label': 'Preparing Food', 'icon': '🍳', 'message': 'Your food is being prepared'},
+        {'key': 'ready', 'label': 'Packed & Ready', 'icon': '📦', 'message': 'Your order is packed and ready'},
+        {'key': 'out_for_delivery', 'label': 'Out for Delivery', 'icon': '🚴', 'message': 'Rider is on the way'},
+        {'key': 'delivered', 'label': 'Delivered', 'icon': '✅', 'message': 'Enjoy your meal!'},
+    ]
+
+    # Map order status to stages
+    status_mapping = {
+        'pending': 0,
+        'preparing': 1,
+        'ready': 2,
+        'out_for_delivery': 3,
+        'delivered': 4,
+    }
+
+    current_stage_index = status_mapping.get(order.status, 0)
+
+    # Calculate estimated times (simplified)
+    estimated_times = {
+        0: "15-20 mins",
+        1: "10-15 mins",
+        2: "5-10 mins",
+        3: "2-5 mins",
+        4: "Delivered"
+    }
+
+    context = {
+        'order': order,
+        'stages': stages,
+        'current_stage_index': current_stage_index,
+        'estimated_time': estimated_times.get(current_stage_index, "Unknown"),
+        'page_title': 'Live Order Tracking'
+    }
+    return render(request, 'restaurant/live_orders.html', context)
+
+@login_required
+def recommendations(request):
+    """AI-based recommendations view"""
+    # Get user's past orders and recommend similar items
+    user_orders = Order.objects.filter(user=request.user)
+    ordered_items = FoodItem.objects.filter(
+        orderitem__order__in=user_orders
+    ).distinct()[:8]
+
+    context = {
+        'items': ordered_items,
+        'page_title': 'AI Recommendations'
+    }
+    return render(request, 'restaurant/menu.html', context)  # Reuse menu template
+
+@login_required
+def feedback(request):
+    """Sentiment-based feedback view"""
+    if request.method == 'POST':
+        order_id = request.POST.get('order_id')
+        name = request.POST.get('name', '')
+        rating = request.POST.get('rating')
+        feedback_text = request.POST.get('feedback_text')
+
+        order = None
+        if order_id:
+            try:
+                order = Order.objects.get(pk=order_id, user=request.user)
+            except Order.DoesNotExist:
+                pass
+
+        feedback_obj = Feedback.objects.create(
+            user=request.user,
+            order=order,
+            name=name,
+            rating=int(rating),
+            feedback_text=feedback_text
+        )
+
+        messages.success(request, 'Thank you for your feedback! Your sentiment has been analyzed.')
+        return redirect('feedback')
+
+    # Show recent orders for feedback
+    recent_orders = Order.objects.filter(user=request.user)[:10]
+    context = {
+        'orders': recent_orders,
+        'page_title': 'Provide Feedback'
+    }
+    return render(request, 'restaurant/feedback.html', context)
+
+@login_required
+def emotional_kit(request):
+    """Auto-gift emotional kit view"""
+    # Show available rewards/gifts
+    context = {
+        'page_title': 'Your Emotional Kit',
+        'message': 'Coming soon! Exclusive rewards based on your loyalty.'
+    }
+    return render(request, 'restaurant/home.html', context)  # Basic placeholder
+
 
 # Admin Dashboard Views
 @user_passes_test(is_staff)
@@ -316,3 +429,19 @@ def admin_review_approve(request, pk):
     review.approved = not review.approved
     review.save()
     return JsonResponse({'success': True, 'approved': review.approved})
+
+@user_passes_test(is_staff)
+def admin_feedback(request):
+    """Admin view for managing feedback"""
+    sentiment_filter = request.GET.get('sentiment')
+    feedbacks = Feedback.objects.all().select_related('user', 'order')
+
+    if sentiment_filter:
+        feedbacks = feedbacks.filter(sentiment=sentiment_filter)
+
+    context = {
+        'feedbacks': feedbacks,
+        'selected_sentiment': sentiment_filter,
+        'sentiment_choices': Feedback.SENTIMENT_CHOICES,
+    }
+    return render(request, 'restaurant/admin/feedback.html', context)

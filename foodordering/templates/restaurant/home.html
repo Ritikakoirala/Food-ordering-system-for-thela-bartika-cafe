@@ -2,101 +2,457 @@
 
 {% block extra_css %}
 <style>
+    /* Hero Section */
     .hero {
-        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+        background: linear-gradient(135deg, rgba(255, 107, 53, 0.9) 0%, rgba(229, 90, 43, 0.9) 100%),
+                    url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80') center/cover;
         color: white;
-        padding: 3rem 1rem;
-        border-radius: 12px;
+        padding: 5rem 1rem;
+        border-radius: 16px;
         margin-bottom: 3rem;
         text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.3);
+        z-index: 1;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
     }
 
     .hero h1 {
-        font-size: 2.5rem;
+        font-size: 3rem;
         margin-bottom: 1rem;
+        animation: fadeInUp 1s ease;
     }
 
-    .hero p {
-        font-size: 1.2rem;
+    .hero .tagline {
+        font-size: 1.4rem;
         opacity: 0.9;
         margin-bottom: 2rem;
+        animation: fadeInUp 1s ease 0.2s both;
     }
 
+    .hero-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        animation: fadeInUp 1s ease 0.4s both;
+    }
+
+    .hero-btn {
+        padding: 1rem 2rem;
+        border: 2px solid white;
+        background: transparent;
+        color: white;
+        border-radius: 50px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        text-decoration: none;
+        display: inline-block;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: white;
+        transition: left 0.3s;
+        z-index: -1;
+    }
+
+    .hero-btn:hover::before {
+        left: 0;
+    }
+
+    .hero-btn:hover {
+        color: var(--primary);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+    }
+
+    /* Section Titles */
     .section-title {
-        font-size: 2rem;
+        font-size: 2.5rem;
         margin-bottom: 2rem;
         text-align: center;
+        color: var(--dark);
+        position: relative;
     }
 
-    .category-card {
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 4px;
+        background: var(--primary);
+        border-radius: 2px;
+    }
+
+    /* Cards */
+    .card {
         background: white;
-        border-radius: 12px;
+        border-radius: 16px;
         overflow: hidden;
         box-shadow: var(--shadow);
-        transition: transform 0.3s;
+        transition: all 0.3s;
         cursor: pointer;
         text-align: center;
         padding: 2rem;
+        position: relative;
     }
 
-    .category-card:hover {
-        transform: translateY(-5px);
+    .card:hover {
+        transform: translateY(-8px);
         box-shadow: var(--shadow-lg);
     }
 
-    .category-icon {
-        font-size: 3rem;
+    .card-icon {
+        font-size: 4rem;
         margin-bottom: 1rem;
     }
 
-    .food-card {
-        background: white;
-        border-radius: 12px;
+    .card-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .card-description {
+        color: var(--secondary);
+        line-height: 1.6;
+    }
+
+    /* Smart Features */
+    .features-grid {
+        display: grid;
+        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .feature-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.95) 100%);
+        border-radius: 16px;
         overflow: hidden;
         box-shadow: var(--shadow);
-        transition: transform 0.3s;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        text-align: center;
+        padding: 2rem;
+        position: relative;
+        text-decoration: none;
+        color: inherit;
+        display: block;
     }
 
-    .food-card:hover {
-        transform: translateY(-5px);
-        box-shadow: var(--shadow-lg);
+    .feature-card:hover {
+        transform: translateY(-12px);
+        box-shadow: 0 12px 40px rgba(0,0,0,0.2);
     }
 
-    .food-image {
+    .feature-card:focus {
+        outline: 2px solid var(--primary);
+        outline-offset: 4px;
+    }
+
+    .feature-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .feature-title {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .feature-description {
+        color: var(--secondary);
+        line-height: 1.6;
+    }
+
+    .feature-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--primary);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+
+    .section-subtitle {
+        font-size: 1.1rem;
+        color: var(--secondary);
+        text-align: center;
+        margin-bottom: 3rem;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* Search & Filter Bar */
+    .search-filter-bar {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+        margin-bottom: 3rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .search-input {
+        flex: 1;
+        min-width: 200px;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+        min-width: 150px;
+    }
+
+    .price-range {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .price-input {
+        width: 80px;
+        padding: 0.5rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+    }
+
+    .veg-toggle {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .toggle-btn {
+        padding: 0.5rem 1rem;
+        border: 2px solid #e0e0e0;
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .toggle-btn.active {
+        background: var(--success);
+        color: white;
+        border-color: var(--success);
+    }
+
+    /* Recommendations */
+    .recommendations-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    }
+
+    .rec-card {
+        position: relative;
+    }
+
+    .ai-badge {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: var(--primary);
+        color: white;
+        padding: 0.25rem 0.5rem;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: bold;
+    }
+
+    /* Offers */
+    .offers-grid {
+        display: grid;
+        gap: 1.5rem;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    }
+
+    .offer-card {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .discount-badge {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        background: var(--danger);
+        color: white;
+        padding: 0.5rem;
+        border-radius: 8px;
+        font-weight: bold;
+        z-index: 2;
+    }
+
+    .offer-image {
         width: 100%;
         height: 200px;
         object-fit: cover;
     }
 
-    .food-info {
-        padding: 1rem;
+    /* Trust Section */
+    .trust-stats {
+        display: grid;
+        gap: 2rem;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        text-align: center;
+        margin-bottom: 3rem;
     }
 
-    .food-name {
-        font-size: 1.2rem;
+    .stat-card {
+        background: white;
+        padding: 2rem;
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
         font-weight: bold;
-        margin-bottom: 0.5rem;
-    }
-
-    .food-price {
         color: var(--primary);
-        font-size: 1.3rem;
-        font-weight: bold;
-        margin: 0.5rem 0;
-    }
-
-    .rating {
-        color: #ffd700;
         margin-bottom: 0.5rem;
     }
 
-    @media (max-width: 640px) {
-        .hero h1 {
-            font-size: 1.8rem;
+    .stat-label {
+        color: var(--secondary);
+        font-size: 1.1rem;
+    }
+
+    /* Footer */
+    .custom-footer {
+        background: var(--secondary);
+        color: white;
+        padding: 3rem 1rem;
+        margin-top: 3rem;
+    }
+
+    .footer-content {
+        max-width: 1200px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+    }
+
+    .footer-section h3 {
+        margin-bottom: 1rem;
+        color: var(--light);
+    }
+
+    .footer-section p, .footer-section a {
+        color: rgba(255,255,255,0.8);
+        text-decoration: none;
+        line-height: 1.6;
+    }
+
+    .footer-section a:hover {
+        color: white;
+    }
+
+    .social-icons {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .social-icon {
+        width: 40px;
+        height: 40px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s;
+        text-decoration: none;
+        color: white;
+    }
+
+    .social-icon:hover {
+        background: white;
+        color: var(--secondary);
+        transform: translateY(-3px);
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
         }
-        
-        .hero p {
-            font-size: 1rem;
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+        .hero h1 {
+            font-size: 2rem;
+        }
+
+        .hero .tagline {
+            font-size: 1.1rem;
+        }
+
+        .hero-buttons {
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .search-filter-bar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .section-title {
+            font-size: 2rem;
         }
     }
 </style>
@@ -104,13 +460,151 @@
 
 {% block content %}
 <div class="container">
-    <!-- Hero Section -->
+    <!-- Enhanced Hero Section -->
     <div class="hero">
-        <h1>🍔 Hungry? Order Now!</h1>
-        <p>Get your favorite food delivered hot & fresh to your doorstep</p>
-        <a href="{% url 'menu' %}" class="btn btn-success" style="background: white; color: var(--primary);">
-            Browse Menu
+        <div class="hero-content">
+            <h1>🍔 Craving Something Delicious?</h1>
+            <p class="tagline">Experience culinary excellence with our AI-powered food ordering platform</p>
+            <div class="hero-buttons">
+                <a href="{% url 'menu' %}" class="hero-btn">Order Now</a>
+                <a href="{% url 'order_history' %}" class="hero-btn">Track Order</a>
+                <a href="#offers" class="hero-btn">View Offers</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search & Filter Bar -->
+    <div class="search-filter-bar">
+        <input type="text" class="search-input" placeholder="Search for food...">
+        <select class="filter-select">
+            <option>All Categories</option>
+            <option>Pizza</option>
+            <option>Burgers</option>
+            <option>Pasta</option>
+            <option>Desserts</option>
+        </select>
+        <div class="price-range">
+            <span>$</span>
+            <input type="number" class="price-input" placeholder="Min" min="0">
+            <span>-</span>
+            <input type="number" class="price-input" placeholder="Max" min="0">
+        </div>
+        <div class="veg-toggle">
+            <button class="toggle-btn active" data-type="veg">🌱 Veg</button>
+            <button class="toggle-btn" data-type="non-veg">🍖 Non-Veg</button>
+        </div>
+    </div>
+
+    <!-- Smart Features Section -->
+    <h2 class="section-title">Smart Restaurant Features</h2>
+    <p class="section-subtitle">Experience the future of dining with our cutting-edge AI-powered restaurant management system</p>
+    <div class="features-grid">
+        <a href="{% url 'live_orders' %}" class="feature-card">
+            <span class="feature-badge">NEW</span>
+            <div class="feature-icon">📍</div>
+            <h3 class="feature-title">Live Order Tracking</h3>
+            <p class="feature-description">Track your order in real-time from kitchen to doorstep with precise ETAs and updates.</p>
         </a>
+        <a href="{% url 'recommendations' %}" class="feature-card">
+            <span class="feature-badge">AI Powered</span>
+            <div class="feature-icon">🤖</div>
+            <h3 class="feature-title">AI-Based Recommendations</h3>
+            <p class="feature-description">Get personalized food suggestions based on your taste preferences and order history.</p>
+        </a>
+        <a href="{% url 'submit_feedback' %}" class="feature-card">
+            <span class="feature-badge">NEW</span>
+            <div class="feature-icon">😊</div>
+            <h3 class="feature-title">Sentiment-Based Feedback</h3>
+            <p class="feature-description">Share your experience with emoji reactions and detailed feedback for better service.</p>
+        </a>
+        <a href="{% url 'emotional_kit' %}" class="feature-card">
+            <span class="feature-badge">AI Powered</span>
+            <div class="feature-icon">🎁</div>
+            <h3 class="feature-title">Auto-Gift Emotional Kit</h3>
+            <p class="feature-description">Receive surprise gifts and discounts based on your loyalty and feedback sentiment.</p>
+        </a>
+    </div>
+
+    <!-- Personalized Recommendations -->
+    <h2 class="section-title">Recommended for You</h2>
+    <div class="recommendations-grid">
+        {% for item in popular_items|slice:":4" %}
+        <div class="food-card rec-card">
+            <span class="ai-badge">AI Recommended</span>
+            <img src="{{ item.image.url }}" alt="{{ item.name }}" class="food-image">
+            <div class="food-info">
+                <div class="food-name">{{ item.name }}</div>
+                <div class="rating">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= item.average_rating %}⭐{% endif %}
+                    {% endfor %}
+                    ({{ item.review_count }})
+                </div>
+                <div class="food-price">${{ item.price }}</div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="addToCart({{ item.id }})">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Trending & Offers Section -->
+    <h2 class="section-title" id="offers">Today's Specials</h2>
+    <div class="offers-grid">
+        <div class="offer-card card">
+            <span class="discount-badge">50% OFF</span>
+            <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Special Pizza" class="offer-image">
+            <div class="food-info">
+                <div class="food-name">Margherita Supreme</div>
+                <div class="food-price"><s>$24.99</s> $12.49</div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="addToCart(1)">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+        <div class="offer-card card">
+            <span class="discount-badge">Buy 1 Get 1</span>
+            <img src="https://images.unsplash.com/photo-1571091718767-18b5b1457add?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Burger Deal" class="offer-image">
+            <div class="food-info">
+                <div class="food-name">Classic Burger Combo</div>
+                <div class="food-price">$18.99</div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="addToCart(2)">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+        <div class="offer-card card">
+            <span class="discount-badge">Free Delivery</span>
+            <img src="https://images.unsplash.com/photo-1621996346565-e3dbc353d2e5?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80" alt="Pasta Special" class="offer-image">
+            <div class="food-info">
+                <div class="food-name">Creamy Alfredo Pasta</div>
+                <div class="food-price">$16.99</div>
+                <button class="btn btn-primary" style="width: 100%;" onclick="addToCart(3)">
+                    Add to Cart
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Trust Section -->
+    <div class="trust-stats">
+        <div class="stat-card">
+            <div class="stat-number">4.8</div>
+            <div class="stat-label">Average Rating</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">10K+</div>
+            <div class="stat-label">Happy Customers</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">25 min</div>
+            <div class="stat-label">Average Delivery Time</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number">50+</div>
+            <div class="stat-label">Restaurant Partners</div>
+        </div>
     </div>
 
     <!-- Categories Section -->
@@ -118,7 +612,7 @@
     <div class="grid">
         {% for category in featured_categories %}
         <a href="{% url 'menu' %}?category={{ category.id }}" style="text-decoration: none;">
-            <div class="category-card">
+            <div class="category-card card">
                 <div class="category-icon">
                     {% if 'pizza' in category.name|lower %}🍕
                     {% elif 'burger' in category.name|lower %}🍔
@@ -137,7 +631,7 @@
     <h2 class="section-title" style="margin-top: 3rem;">Popular Items</h2>
     <div class="grid">
         {% for item in popular_items %}
-        <div class="food-card">
+        <div class="food-card card">
             <img src="{{ item.image.url }}" alt="{{ item.name }}" class="food-image">
             <div class="food-info">
                 <div class="food-name">{{ item.name }}</div>
@@ -156,6 +650,44 @@
         {% endfor %}
     </div>
 </div>
+
+<!-- Custom Footer -->
+<footer class="custom-footer">
+    <div class="footer-content">
+        <div class="footer-section">
+            <h3>🍕 FoodHub</h3>
+            <p>Your ultimate destination for delicious food delivery. We connect you with the best restaurants in your area.</p>
+            <div class="social-icons">
+                <a href="#" class="social-icon">📘</a>
+                <a href="#" class="social-icon">🐦</a>
+                <a href="#" class="social-icon">📷</a>
+                <a href="#" class="social-icon">💼</a>
+            </div>
+        </div>
+        <div class="footer-section">
+            <h3>Quick Links</h3>
+            <p><a href="{% url 'menu' %}">Browse Menu</a></p>
+            <p><a href="{% url 'order_history' %}">Order History</a></p>
+            <p><a href="#offers">Special Offers</a></p>
+            <p><a href="{% url 'cart' %}">Cart</a></p>
+        </div>
+        <div class="footer-section">
+            <h3>Contact Us</h3>
+            <p>📞 +1 (555) 123-4567</p>
+            <p>📧 hello@foodhub.com</p>
+            <p>📍 123 Food Street, Flavor City</p>
+        </div>
+        <div class="footer-section">
+            <h3>Legal</h3>
+            <p><a href="#">Privacy Policy</a></p>
+            <p><a href="#">Terms of Service</a></p>
+            <p><a href="#">Cookie Policy</a></p>
+        </div>
+    </div>
+    <div style="text-align: center; margin-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
+        <p>&copy; 2024 FoodHub. All rights reserved. Made with ❤️ for food lovers.</p>
+    </div>
+</footer>
 {% endblock %}
 
 {% block extra_js %}
@@ -204,5 +736,48 @@ function addToCart(foodId) {
         console.error('Error adding to cart:', error);
     });
 }
+
+// Veg/Non-Veg toggle functionality
+document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        // Here you could filter the displayed items based on selection
+        console.log('Filter:', this.dataset.type);
+    });
+});
+
+// Smooth scroll for hero buttons
+document.querySelectorAll('.hero-btn[href^="#"]').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+});
+
+// Add scroll animations
+const observerOptions = {
+    threshold: 0.1,
+    rootMargin: '0px 0px -50px 0px'
+};
+
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+        }
+    });
+}, observerOptions);
+
+document.querySelectorAll('.card, .stat-card, .feature-card').forEach(card => {
+    card.style.opacity = '0';
+    card.style.transform = 'translateY(30px)';
+    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+    observer.observe(card);
+});
 </script>
 {% endblock %}

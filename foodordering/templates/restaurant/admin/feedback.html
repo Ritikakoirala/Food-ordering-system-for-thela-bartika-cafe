@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .admin-container {
+        padding: 2rem;
+    }
+
+    .admin-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+    }
+
+    .admin-title {
+        color: var(--dark);
+        margin: 0;
+    }
+
+    .filter-form {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .filter-select {
+        padding: 0.5rem 1rem;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    .feedback-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .feedback-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        transition: transform 0.3s;
+    }
+
+    .feedback-card:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .feedback-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .feedback-user {
+        font-weight: bold;
+        color: var(--dark);
+        margin-bottom: 0.25rem;
+    }
+
+    .feedback-meta {
+        font-size: 0.9rem;
+        color: var(--secondary);
+    }
+
+    .sentiment-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+
+    .sentiment-positive {
+        background: var(--success);
+        color: white;
+    }
+
+    .sentiment-neutral {
+        background: var(--warning);
+        color: white;
+    }
+
+    .sentiment-negative {
+        background: var(--danger);
+        color: white;
+    }
+
+    .feedback-rating {
+        color: #ffd700;
+        font-size: 1.1rem;
+        margin-bottom: 1rem;
+    }
+
+    .feedback-text {
+        background: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        line-height: 1.6;
+    }
+
+    .feedback-order {
+        font-size: 0.9rem;
+        color: var(--primary);
+        font-weight: 500;
+    }
+
+    .no-feedback {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+    }
+
+    .no-feedback-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: var(--shadow);
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        color: var(--secondary);
+        font-size: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .admin-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .filter-form {
+            width: 100%;
+            justify-content: space-between;
+        }
+
+        .feedback-header {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">Feedback Management</h1>
+            <form method="get" class="filter-form">
+                <select name="sentiment" class="filter-select" onchange="this.form.submit()">
+                    <option value="">All Sentiments</option>
+                    {% for choice_value, choice_label in sentiment_choices %}
+                    <option value="{{ choice_value }}" {% if selected_sentiment == choice_value %}selected{% endif %}>
+                        {{ choice_label }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+
+        <!-- Feedback Statistics -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ feedbacks|length }}</div>
+                <div class="stat-label">Total Feedback</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ feedbacks|length|add:"0" }}</div>
+                <div class="stat-label">Average Rating</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ feedbacks.filter(sentiment='positive')|length }}</div>
+                <div class="stat-label">Positive</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ feedbacks.filter(sentiment='negative')|length }}</div>
+                <div class="stat-label">Negative</div>
+            </div>
+        </div>
+
+        <!-- Feedback List -->
+        {% if feedbacks %}
+        <div class="feedback-grid">
+            {% for feedback in feedbacks %}
+            <div class="feedback-card">
+                <div class="feedback-header">
+                    <div>
+                        <div class="feedback-user">{{ feedback.user.get_full_name|default:feedback.user.username }}</div>
+                        <div class="feedback-meta">
+                            {% if feedback.name %}Name: {{ feedback.name }} • {% endif %}
+                            {{ feedback.created_at|date:"M d, Y H:i" }}
+                        </div>
+                        {% if feedback.order %}
+                        <div class="feedback-order">Order #{{ feedback.order.order_number }}</div>
+                        {% endif %}
+                    </div>
+                    <span class="sentiment-badge sentiment-{{ feedback.sentiment }}">
+                        {{ feedback.get_sentiment_display }}
+                    </span>
+                </div>
+
+                <div class="feedback-rating">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= feedback.rating %}★{% else %}☆{% endif %}
+                    {% endfor %}
+                    ({{ feedback.rating }}/5)
+                </div>
+
+                <div class="feedback-text">
+                    {{ feedback.feedback_text }}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-feedback">
+            <div class="no-feedback-icon">💬</div>
+            <h3>No Feedback Found</h3>
+            <p>{% if selected_sentiment %}No {{ selected_sentiment }} feedback entries found.{% else %}No feedback has been submitted yet.{% endif %}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

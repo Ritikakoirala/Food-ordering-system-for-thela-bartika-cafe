@@ -1,0 +1,291 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<style>
+    .tracking-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .order-info {
+        background: white;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: var(--shadow);
+        margin-bottom: 2rem;
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid #eee;
+    }
+
+    .order-id {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: var(--primary);
+    }
+
+    .order-total {
+        font-size: 1.3rem;
+        font-weight: bold;
+        color: var(--dark);
+    }
+
+    .timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 1rem;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e0e0e0;
+    }
+
+    .timeline-item {
+        position: relative;
+        margin-bottom: 2rem;
+        opacity: 0.5;
+        transition: opacity 0.3s;
+    }
+
+    .timeline-item.active {
+        opacity: 1;
+    }
+
+    .timeline-item.completed {
+        opacity: 1;
+    }
+
+    .timeline-icon {
+        position: absolute;
+        left: -2rem;
+        top: 0;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 50%;
+        background: #e0e0e0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        color: white;
+        z-index: 2;
+    }
+
+    .timeline-item.active .timeline-icon {
+        background: var(--primary);
+        animation: pulse 2s infinite;
+    }
+
+    .timeline-item.completed .timeline-icon {
+        background: var(--success);
+    }
+
+    .timeline-content {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        margin-left: 1rem;
+    }
+
+    .timeline-title {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        color: var(--dark);
+    }
+
+    .timeline-message {
+        color: var(--secondary);
+        margin-bottom: 0.5rem;
+    }
+
+    .timeline-time {
+        font-size: 0.9rem;
+        color: var(--primary);
+        font-weight: 500;
+    }
+
+    .estimated-time {
+        background: var(--warning);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: bold;
+        display: inline-block;
+        margin-top: 1rem;
+    }
+
+    .no-orders {
+        text-align: center;
+        padding: 3rem;
+        background: white;
+        border-radius: 16px;
+        box-shadow: var(--shadow);
+    }
+
+    .no-orders-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .no-orders-title {
+        font-size: 1.5rem;
+        margin-bottom: 1rem;
+        color: var(--dark);
+    }
+
+    .no-orders-text {
+        color: var(--secondary);
+        margin-bottom: 2rem;
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .order-items {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #eee;
+    }
+
+    .order-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid #f8f9fa;
+    }
+
+    .order-item:last-child {
+        border-bottom: none;
+    }
+
+    .item-name {
+        font-weight: 500;
+    }
+
+    .item-quantity {
+        color: var(--secondary);
+        font-size: 0.9rem;
+    }
+
+    .item-price {
+        font-weight: bold;
+        color: var(--primary);
+    }
+
+    @media (max-width: 768px) {
+        .tracking-container {
+            padding: 1rem;
+        }
+
+        .order-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+        }
+
+        .timeline {
+            padding-left: 1.5rem;
+        }
+
+        .timeline::before {
+            left: 0.5rem;
+        }
+
+        .timeline-icon {
+            left: -1.5rem;
+            width: 1.5rem;
+            height: 1.5rem;
+            font-size: 0.8rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="tracking-container">
+        {% if no_active_orders %}
+            <div class="no-orders">
+                <div class="no-orders-icon">📦</div>
+                <h2 class="no-orders-title">No Active Orders</h2>
+                <p class="no-orders-text">You don't have any orders currently being prepared or delivered. Check your order history for past orders.</p>
+                <a href="{% url 'menu' %}" class="btn btn-primary">Browse Menu</a>
+            </div>
+        {% else %}
+            <h1 style="text-align: center; margin-bottom: 2rem; color: var(--dark);">Live Order Tracking</h1>
+
+            <div class="order-info">
+                <div class="order-header">
+                    <div class="order-id">Order #{{ order.order_number }}</div>
+                    <div class="order-total">${{ order.grand_total }}</div>
+                </div>
+
+                <div class="order-items">
+                    {% for item in order.items.all %}
+                    <div class="order-item">
+                        <div>
+                            <span class="item-name">{{ item.food_item.name }}</span>
+                            <span class="item-quantity">x{{ item.quantity }}</span>
+                        </div>
+                        <span class="item-price">${{ item.subtotal }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="timeline">
+                {% for stage in stages %}
+                <div class="timeline-item {% if forloop.counter0 < current_stage_index %}completed{% elif forloop.counter0 == current_stage_index %}active{% endif %}">
+                    <div class="timeline-icon">{{ stage.icon }}</div>
+                    <div class="timeline-content">
+                        <div class="timeline-title">{{ stage.label }}</div>
+                        <div class="timeline-message">{{ stage.message }}</div>
+                        {% if forloop.counter0 == current_stage_index %}
+                        <div class="timeline-time">Estimated time: {{ estimated_time }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% if current_stage_index < 4 %}
+            <div style="text-align: center; margin-top: 2rem;">
+                <div class="estimated-time">
+                    🚀 Estimated delivery: {{ estimated_time }}
+                </div>
+            </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Simulate order status updates for demo purposes
+    {% if order and current_stage_index < 4 %}
+    setTimeout(function() {
+        // In a real app, this would poll the server for updates
+        location.reload();
+    }, 30000); // Refresh every 30 seconds
+    {% endif %}
+</script>
+{% endblock %}

@@ -120,10 +120,49 @@ class Review(models.Model):
     comment = models.TextField()
     approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         unique_together = ('user', 'food_item')
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return f"{self.user.username} - {self.food_item.name} ({self.rating}★)"
+
+class Feedback(models.Model):
+    SENTIMENT_CHOICES = [
+        ('positive', 'Positive'),
+        ('neutral', 'Neutral'),
+        ('negative', 'Negative'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='feedbacks')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='feedbacks', null=True, blank=True)
+    name = models.CharField(max_length=100, blank=True)
+    rating = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)])
+    feedback_text = models.TextField()
+    sentiment = models.CharField(max_length=10, choices=SENTIMENT_CHOICES, default='neutral')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Feedback from {self.user.username} - {self.sentiment}"
+
+    def save(self, *args, **kwargs):
+        # Simple sentiment analysis based on keywords
+        text = self.feedback_text.lower()
+        positive_words = ['great', 'excellent', 'amazing', 'love', 'fantastic', 'delicious', 'perfect', 'awesome', 'good', 'best', 'wonderful']
+        negative_words = ['bad', 'terrible', 'awful', 'horrible', 'worst', 'disgusting', 'slow', 'cold', 'rude', 'disappointed']
+
+        positive_count = sum(1 for word in positive_words if word in text)
+        negative_count = sum(1 for word in negative_words if word in text)
+
+        if positive_count > negative_count:
+            self.sentiment = 'positive'
+        elif negative_count > positive_count:
+            self.sentiment = 'negative'
+        else:
+            self.sentiment = 'neutral'
+
+        super().save(*args, **kwargs)
