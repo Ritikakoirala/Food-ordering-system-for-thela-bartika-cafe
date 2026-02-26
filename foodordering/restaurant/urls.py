@@ -18,11 +18,11 @@ urlpatterns = [
     # Smart Features URLs
     path('live-orders/', views.live_orders, name='live_orders'),
     path('recommendations/', views.recommendations, name='recommendations'),
-    path('feedback/', views.feedback, name='submit_feedback'),
+    path('feedback/', views.feedback, name='feedback'),
     path('emotional-kit/', views.emotional_kit, name='emotional_kit'),
     path('register/', views.register, name='register'),
     path('login/', auth_views.LoginView.as_view(template_name='restaurant/login.html'), name='login'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('logout/', auth_views.LogoutView.as_view(next_page='home'), name='logout'),
     
     # Admin URLs
     path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),

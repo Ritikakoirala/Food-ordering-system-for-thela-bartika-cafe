@@ -1,0 +1,50 @@
+# Django Framework
+Django>=5.1,<6.0
+djangorestframework>=3.14.0
+django-cors-headers>=4.3.0
+
+# Authentication
+djangorestframework-simplejwt>=5.3.0
+django-otp>=1.4.0
+pyotp>=2.9.0
+qrcode>=7.4.2
+argon2-cffi>=23.1.0
+django-phonenumber-field>=7.2.0
+
+# Real-time & Channels
+channels>=4.0.0
+channels-redis>=4.1.0
+daphne>=4.0.0
+django-redis>=5.4.0
+
+# Database
+psycopg2-binary>=2.9.9
+
+# Security & Encryption
+cryptography>=41.0.0
+django-ratelimit>=4.1.0
+
+# Payment - Stripe
+stripe>=7.8.0
+
+# Google Maps
+google-maps-services-python>=0.1.4
+
+# Production Server
+gunicorn>=21.2.0
+whitenoise>=6.6.0
+
+# Utilities
+python-dotenv>=1.0.0
+Pillow>=10.1.0
+python-dateutil>=2.8.2
+pytz>=2023.3
+
+# Redis
+redis>=5.0.0
+
+# Logging
+python-json-logger>=2.0.0
+
+# Development
+ipython>=8.0.0

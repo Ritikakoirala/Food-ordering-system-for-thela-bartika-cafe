@@ -2,16 +2,49 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth import login, authenticate
 from django.contrib import messages
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.db.models import Q, Sum, Count
 from django.views.decorators.http import require_POST
 from decimal import Decimal
+from functools import wraps
 from .models import *
 from .forms import *
 
 # Helper function
 def is_staff(user):
     return user.is_staff
+
+# Custom decorator for admin-only access
+def admin_required(view_func):
+    """Decorator to ensure only admin users can access the view"""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.warning(request, 'Please login to access this page.')
+            return redirect('login')
+        
+        if not request.user.is_admin_user:
+            messages.error(request, 'Access denied. Admin privileges required.')
+            return redirect('home')
+        
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
+
+# Custom decorator for admin or rider access (for order updates)
+def admin_or_rider_required(view_func):
+    """Decorator to ensure admin or rider users can access the view"""
+    @wraps(view_func)
+    def _wrapped_view(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            messages.warning(request, 'Please login to access this page.')
+            return redirect('login')
+        
+        if not (request.user.is_admin_user or request.user.is_rider):
+            messages.error(request, 'Access denied. Admin or Rider privileges required.')
+            return redirect('home')
+        
+        return view_func(request, *args, **kwargs)
+    return _wrapped_view
 
 # Customer Views
 def home(request):
@@ -332,15 +365,15 @@ def emotional_kit(request):
     return render(request, 'restaurant/home.html', context)  # Basic placeholder
 
 
-# Admin Dashboard Views
-@user_passes_test(is_staff)
+# Admin Dashboard Views - Only Admin users can access
+@admin_required
 def admin_dashboard(request):
-    total_orders = Order.objects.count()
-    pending_orders = Order.objects.filter(status='pending').count()
-    total_revenue = Order.objects.aggregate(Sum('total_price'))['total_price__sum'] or 0
+    total_orders = Order.objects.filter(is_deleted=False).count()
+    pending_orders = Order.objects.filter(status='pending', is_deleted=False).count()
+    total_revenue = Order.objects.filter(is_deleted=False).aggregate(Sum('total_price'))['total_price__sum'] or 0
     total_customers = Customer.objects.count()
     
-    recent_orders = Order.objects.all()[:10]
+    recent_orders = Order.objects.filter(is_deleted=False)[:10]
     
     context = {
         'total_orders': total_orders,
@@ -351,10 +384,10 @@ def admin_dashboard(request):
     }
     return render(request, 'restaurant/admin/dashboard.html', context)
 
-@user_passes_test(is_staff)
+@admin_required
 def admin_orders(request):
     status_filter = request.GET.get('status')
-    orders = Order.objects.all().prefetch_related('items__food_item')
+    orders = Order.objects.filter(is_deleted=False).prefetch_related('items__food_item', 'user')
     
     if status_filter:
         orders = orders.filter(status=status_filter)
@@ -366,11 +399,16 @@ def admin_orders(request):
     }
     return render(request, 'restaurant/admin/orders.html', context)
 
-@user_passes_test(is_staff)
+@admin_required
 def admin_order_detail(request, pk):
-    order = get_object_or_404(Order, pk=pk)
+    order = get_object_or_404(Order, pk=pk, is_deleted=False)
     
     if request.method == 'POST':
+        if 'delete' in request.POST:
+            order.soft_delete()
+            messages.success(request, 'Order deleted successfully!')
+            return redirect('admin_orders')
+        
         new_status = request.POST.get('status')
         order.status = new_status
         order.save()
@@ -379,12 +417,12 @@ def admin_order_detail(request, pk):
     
     return render(request, 'restaurant/admin/order_detail.html', {'order': order})
 
-@user_passes_test(is_staff)
+@admin_required
 def admin_food_items(request):
     items = FoodItem.objects.all().select_related('category')
     return render(request, 'restaurant/admin/food_items.html', {'items': items})
 
-@user_passes_test(is_staff)
+@admin_required
 def admin_food_add(request):
     if request.method == 'POST':
         form = FoodItemForm(request.POST, request.FILES)
@@ -396,7 +434,7 @@ def admin_food_add(request):
         form = FoodItemForm()
     return render(request, 'restaurant/admin/food_form.html', {'form': form, 'action': 'Add'})
 
-@user_passes_test(is_staff)
+@admin_required
 def admin_food_edit(request, pk):
     item = get_object_or_404(FoodItem, pk=pk)
     if request.method == 'POST':
@@ -409,7 +447,7 @@ def admin_food_edit(request, pk):
         form = FoodItemForm(instance=item)
     return render(request, 'restaurant/admin/food_form.html', {'form': form, 'action': 'Edit'})
 
-@user_passes_test(is_staff)
+@admin_required
 @require_POST
 def admin_food_delete(request, pk):
     item = get_object_or_404(FoodItem, pk=pk)
@@ -417,12 +455,12 @@ def admin_food_delete(request, pk):
     messages.success(request, 'Food item deleted!')
     return redirect('admin_food_items')
 
-@user_passes_test(is_staff)
+@admin_required
 def admin_reviews(request):
     reviews = Review.objects.all().select_related('user', 'food_item')
     return render(request, 'restaurant/admin/reviews.html', {'reviews': reviews})
 
-@user_passes_test(is_staff)
+@admin_required
 @require_POST
 def admin_review_approve(request, pk):
     review = get_object_or_404(Review, pk=pk)
@@ -430,7 +468,7 @@ def admin_review_approve(request, pk):
     review.save()
     return JsonResponse({'success': True, 'approved': review.approved})
 
-@user_passes_test(is_staff)
+@admin_required
 def admin_feedback(request):
     """Admin view for managing feedback"""
     sentiment_filter = request.GET.get('sentiment')
